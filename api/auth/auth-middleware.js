@@ -10,7 +10,7 @@ const checkBody = (req, res, next) => {
     } else {
        req.newUser = {
            username: username.trim(),
-           password: password.trim()
+           password
        } 
         next()
     }
