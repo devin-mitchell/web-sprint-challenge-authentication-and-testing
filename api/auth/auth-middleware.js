@@ -1,35 +1,36 @@
-const { JWT_SECRET } = require("../secrets"); 
-const jwt = require('jsonwebtoken')
 const Users = require('../users/users-model')
 
-const restricted = (req, res, next) => {
-  const token = req.headers.authorization
-  if (token) {
-   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-     if (err) {
-       next({
-         status: 401,
-         message: `Token invalid`
-       })
-     } else {
-       req.decodedJwt = decoded
-       next()
-     }
-   })
- } else {
-   next({
-     status: 401,
-     message: 'Token required'
-   })
-  }
+const checkBody = (req, res, next) => {
+    const { username, password } = req.body
+    if (!username.trim() || !password.trim()) {
+        next({
+            status: 401,
+            message: 'username and password required'
+        })
+    } else {
+       req.newUser = {
+           username: username.trim(),
+           password: password.trim()
+       } 
+        next()
+    }
 }
 
 const checkUsernameUnique = async (req, res, next) => {
-
+    const { username } = req.newUser || req.body
+    const userTaken = await Users.getBy({ username }) 
+    if (userTaken) {
+        next({
+            status: 401,
+            message: 'username taken'
+        })
+    } else {
+        next()
+    }
 }
 
 const checkUsernameExists = async (req, res, next) => {
-  const { username } = req.body
+  const { username } = req.newUser || req.body
   const user = await Users.getBy({ username })
   if (user) {
     req.user = user
@@ -37,12 +38,13 @@ const checkUsernameExists = async (req, res, next) => {
   } else {
     next({
       status: 401,
-      message: 'Invalid credentials'
+      message: 'invalid credentials'
     })
   }
 }
 
 module.exports = {
-  restricted,
-  checkUsernameExists,
+    checkBody,
+    checkUsernameUnique,
+    checkUsernameExists
 }
