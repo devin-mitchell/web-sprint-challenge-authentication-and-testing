@@ -2,9 +2,9 @@ const Users = require('../users/users-model')
 
 const checkBody = (req, res, next) => {
     const { username, password } = req.body
-    if (!username.trim() || !password.trim()) {
+    if (!username || !password || username.trim() === '') {
         next({
-            status: 401,
+            status: 400,
             message: 'username and password required'
         })
     } else {
